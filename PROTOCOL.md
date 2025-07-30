@@ -76,6 +76,83 @@ The `NETWORK_RESPONSE` packet is sent by a Router or Leader in response to a `NE
 > All values are in network byte order (big-endian).  
 > Devices must gracefully ignore unknown field types.
 
+---
+
+## 📡 JOIN_REQUEST Packet
+
+The `JOIN_REQUEST` packet is sent by a device after selecting a Router as its preferred parent. It initiates the secure admission process to formally join the AutoMesh network.
+
+### 🧠 Purpose
+
+- Formally request admission to the network  
+- Propose parent-child relationship  
+
+### 🔧 MAC Layer Configuration (IEEE 802.15.4)
+
+| Field                 | Value                             |
+|-----------------------|-----------------------------------|
+| Frame Type            | Data (0x0001)                     |
+| Destination PAN ID    | Fixed (e.g., `0xA0A0`)            |
+| Destination Address   | 16-bit short address of Router    |
+| Source PAN ID         | _Omitted_                         |
+| Source Address        | 64-bit EUI-64                     |
+| Addressing Mode       | Dst: 16-bit, Src: 64-bit          |
+| PAN ID Compression    | Set to 1                          |
+
+## 📦 Payload Format – `JOIN_REQUEST`
+
+| Field         | Size | Description                              |
+|---------------|------|------------------------------------------|
+| `type`        | 1 B  | Message type (`0x03` = join request)     |
+| TV Fields     | ≥1 B | One or more Type–Value entries           |
+
+### 📘 Supported TV Fields
+
+| Type   | Name         | Size | Description                          |
+|--------|--------------|------|--------------------------------------|
+| `0x02` | Device Role  | 1 B  | `0x00`=Router, `0x01`=ED, `0x02`=SED |
+
+---
+
+## 📡 JOIN_RESPONSE Packet
+
+The `JOIN_RESPONSE` packet is sent by a Router in response to a valid `JOIN_REQUEST`. It confirms admission and provides network addressing and essential network context.
+
+### 🧠 Purpose
+
+- Confirm join acceptance  
+- Assign short address  
+- Communicate network partition metadata  
+
+### 🔧 MAC Layer Configuration (IEEE 802.15.4)
+
+| Field                 | Value                             |
+|-----------------------|-----------------------------------|
+| Frame Type            | Data (0x0001)                     |
+| Destination PAN ID    | Fixed (e.g., `0xA0A0`)            |
+| Destination Address   | 64-bit EUI-64 of joining device   |
+| Source PAN ID         | _Omitted_                         |
+| Source Address        | 16-bit short address of Router    |
+| Addressing Mode       | Dst: 64-bit, Src: 16-bit          |
+| PAN ID Compression    | Set to 1                          |
+
+## 📦 Payload Format – `JOIN_RESPONSE`
+
+| Field         | Size | Description                              |
+|---------------|------|------------------------------------------|
+| `type`        | 1 B  | Message type (`0x04` = join response)    |
+| TV Fields     | ≥1 B | One or more Type–Value entries           |
+
+### 📘 Supported TV Fields
+
+| Type   | Name                | Size | Description                                              |
+|--------|---------------------|------|----------------------------------------------------------|
+| `0x32` | Status              | 1 B  | `0x00` = OK, `0x01` = Rejected                           |
+| `0x30` | Assigned Short Addr | 2 B  | Assigned address (only present if Status ≠ `0x01`)       |
+| `0x15` | Partition ID        | 2 B  | 16-bit ID of the current partition (if Status ≠ `0x01`)  |
+
+> Devices must treat a missing `Status` field as an implicit accept (`0x00`).  
+> If `Status == 0x01` (Rejected), both `Assigned Short Addr` and `Partition ID` must be omitted.
 
 ---
 
