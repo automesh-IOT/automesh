@@ -4,9 +4,25 @@ This document defines the core packet structures and messaging formats for the *
 
 ---
 
+## 🔗 Common MAC Layer Configurations (IEEE 802.15.4)
+
+All AutoMesh protocol packets are transmitted over IEEE 802.15.4 with the following common MAC layer settings unless otherwise specified:
+
+| Field               | Value                           | Notes                                      |
+| ------------------- | ------------------------------- | ------------------------------------------ |
+| Frame Type          | Data (0x0001)                   | All packets use Data frames                |
+| Destination PAN ID  | Fixed (e.g., `0xA0A0`)          | Network-wide PAN ID                        |
+| Source PAN ID       | *Omitted* (via PAN compression) | PAN ID Compression bit set to 1            |
+| PAN ID Compression  | Set to 1                        |                                            |
+| Addressing Mode     | Mixed (16/64-bit)               | See each packet for details                |
+
+> **Note:** Addressing mode, source, and destination address fields may vary per packet type (see individual packet sections for details).
+
+---
+
 ## 📡 DISCOVER\_REQUEST Packet
 
-The `DISCOVER_REQUEST` packet is broadcast by a device attempting to join the AutoMesh network. It is transmitted over IEEE 802.15.4 using **mixed addressing**: a 64-bit extended source address and a 16-bit broadcast destination address.
+The `DISCOVER_REQUEST` packet is broadcast by a device attempting to join the AutoMesh network.
 
 ### 🧠 Purpose
 
@@ -17,15 +33,9 @@ The `DISCOVER_REQUEST` packet is broadcast by a device attempting to join the Au
 
 ### 🔧 MAC Layer Configuration (IEEE 802.15.4)
 
-| Field               | Value                           |
-| ------------------- | ------------------------------- |
-| Frame Type          | Data (0x0001)                   |
-| Destination PAN ID  | Fixed (e.g., `0xA0A0`)          |
-| Destination Address | `0xFFFF` (broadcast)            |
-| Source PAN ID       | *Omitted* (via PAN compression) |
-| Source Address      | 64-bit EUI-64                   |
-| Addressing Mode     | Dst: 16-bit, Src: 64-bit        |
-| PAN ID Compression  | Set to 1                        |
+- **Destination Address:** `0xFFFF` (broadcast)
+- **Source Address:** 64-bit EUI-64
+- **Addressing Mode:** Dst: 16-bit, Src: 64-bit
 
 ### 📦 Payload Format
 
@@ -54,17 +64,11 @@ The `DISCOVER_RESPONSE` packet is sent by a Router or Leader in response to a `D
 
 ### 🔧 MAC Layer Configuration (IEEE 802.15.4)
 
-| Field               | Value                               |
-| ------------------- | ----------------------------------- |
-| Frame Type          | Data (0x0001)                       |
-| Destination PAN ID  | Fixed (e.g., `0xA0A0`)              |
-| Destination Address | 64-bit EUI-64 from discover request |
-| Source PAN ID       | *Omitted*                           |
-| Source Address      | 16-bit short address                |
-| Addressing Mode     | Dst: 64-bit, Src: 16-bit            |
-| PAN ID Compression  | Set to 1                            |
+- **Destination Address:** 64-bit EUI-64 from discover request
+- **Source Address:** 16-bit short address
+- **Addressing Mode:** Dst: 64-bit, Src: 16-bit
 
-## 📦 Payload Format – `DISCOVER_RESPONSE`
+### 📦 Payload Format
 
 | Field      | Size | Description                                    |
 | ---------- | ---- | ---------------------------------------------- |
@@ -92,17 +96,11 @@ The `JOIN_REQUEST` packet is sent by a device after selecting a Router as its pr
 
 ### 🔧 MAC Layer Configuration (IEEE 802.15.4)
 
-| Field               | Value                          |
-| ------------------- | ------------------------------ |
-| Frame Type          | Data (0x0001)                  |
-| Destination PAN ID  | Fixed (e.g., `0xA0A0`)         |
-| Destination Address | 16-bit short address of Router |
-| Source PAN ID       | *Omitted*                      |
-| Source Address      | 64-bit EUI-64                  |
-| Addressing Mode     | Dst: 16-bit, Src: 64-bit       |
-| PAN ID Compression  | Set to 1                       |
+- **Destination Address:** 16-bit short address of Router
+- **Source Address:** 64-bit EUI-64  
+- **Addressing Mode:** Dst: 16-bit, Src: 64-bit
 
-## 📦 Payload Format – `JOIN_REQUEST`
+### 📦 Payload Format – `JOIN_REQUEST`
 
 | Field      | Size | Description                                    |
 | ---------- | ---- | ---------------------------------------------- |
@@ -129,17 +127,13 @@ The `JOIN_RESPONSE` packet is sent by a Router in response to a valid `JOIN_REQU
 
 ### 🔧 MAC Layer Configuration (IEEE 802.15.4)
 
-| Field               | Value                           |
-| ------------------- | ------------------------------- |
-| Frame Type          | Data (0x0001)                   |
-| Destination PAN ID  | Fixed (e.g., `0xA0A0`)          |
-| Destination Address | 64-bit EUI-64 of joining device |
-| Source PAN ID       | *Omitted*                       |
-| Source Address      | 16-bit short address of Router  |
-| Addressing Mode     | Dst: 64-bit, Src: 16-bit        |
-| PAN ID Compression  | Set to 1                        |
+Only the following fields differ from the common configuration:
 
-## 📦 Payload Format – `JOIN_RESPONSE`
+- **Destination Address:** 64-bit EUI-64 of joining device
+- **Source Address:** 16-bit short address of Router
+- **Addressing Mode:** Dst: 64-bit, Src: 16-bit
+
+### 📦 Payload Format – `JOIN_RESPONSE`
 
 | Field      | Size | Description                                    |
 | ---------- | ---- | ---------------------------------------------- |
@@ -149,9 +143,8 @@ The `JOIN_RESPONSE` packet is sent by a Router in response to a valid `JOIN_REQU
 **Required TLVs in `JOIN_RESPONSE`:**
 
 * `Assigned Short Address` (`type-len = 0x40`)
-* `Partition ID` (`type-len = 0x80`)
+* `Partition ID` (`type-len = 0x80`) 
 * `Status` (`type-len = 0x07`)
 * Optionally: `Router ID`, `Network Weight`, `Link Cost to Leader`
 
-> For all packets, see [TLV.md](TLV.md) for the full registry of TLV field definitions, type-len values, and semantics.
-> Devices must gracefully ignore unknown TLV types.
+---
